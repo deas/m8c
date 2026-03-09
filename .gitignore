@@ -3,4 +3,6 @@
 .ansible
 *.retry
 roles*
+.env*
 config.yml
+

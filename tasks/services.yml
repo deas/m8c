@@ -1,0 +1,59 @@
+- name: Ensure Tailscale and Ollama are started (bypass JSON parse error)
+  block:
+    - name: Start Tailscale service
+      # TODO: restart more robust than start which fails when already started : Bootstrap failed: 5: Input/output error
+      command: sudo /opt/homebrew/bin/brew services restart tailscale
+      environment:
+        HOMEBREW_SERVICES_NO_DOMAIN_WARNING: "1"
+        HOMEBREW_NO_ENV_HINTS: "1"
+      register: tailscale_start
+      # become: true
+      changed_when: "'Service `tailscale` already started' not in tailscale_start.stdout"
+    - name: Set Ollama to listen on all interfaces
+      command: launchctl setenv OLLAMA_HOST "0.0.0.0"
+    # - name: Ensure Ollama plist has OLLAMA_HOST set to 0.0.0.0
+    #   community.general.osx_defaults:
+    #     domain: "/Users/{{ ansible_user }}/Library/LaunchAgents/homebrew.mxcl.ollama.plist"
+    #     key: "EnvironmentVariables"
+    #     type: "dict"
+    #     value:
+    #       OLLAMA_HOST: "0.0.0.0"
+    #   register: ollama_config
+    - name: Start Ollama service
+      command: /opt/homebrew/bin/brew services restart ollama
+      environment:
+        HOMEBREW_SERVICES_NO_DOMAIN_WARNING: "1"
+        HOMEBREW_NO_ENV_HINTS: "1"
+      # register: ollama_start
+      ##  when: ollama_start is failed
+      # when: ollama_config.changed or (ollama_start is failed)
+      # changed_when: "'Service `ollama` already started' not in ollama_start.stdout"
+# - name: Ensure Tailscale service is started and enabled
+#   community.general.homebrew_services:
+#     name: tailscale
+#     state: present
+#
+# - name: Ensure Ollama service is started and enabled
+#   community.general.homebrew_services:
+#     name: ollama
+#     state: present
+
+- name: Check if Tailscale is authenticated
+  command: tailscale status
+  register: tailscale_status
+  changed_when: false
+  failed_when: false
+
+- name: Print Tailscale login URL if not authenticated
+  debug:
+    msg: "Tailscale is installed but not authenticated. Run 'sudo tailscale up' to log in."
+  when: "'Logged out' in tailscale_status.stdout or tailscale_status.rc != 0"
+# - name: Verify Ollama is reachable
+#   uri:
+#     url: http://localhost:11434/api/tags
+#     method: GET
+#   register: ollama_verify
+#   until: ollama_verify.status == 200
+#   retries: 5
+#   delay: 5
+#   desc: "Wait for Ollama API to become available"

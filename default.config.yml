@@ -1,7 +1,7 @@
 ---
-configure_dotfiles: true
-configure_terminal: true
-configure_osx: true
+configure_dotfiles: false
+configure_terminal: false
+configure_osx: false
 
 # Set to 'true' to configure the Dock via dockutil.
 configure_dock: false
@@ -37,25 +37,33 @@ homebrew_installed_packages:
   # - ansible # Installed via Pip.
   - autoconf
   - bash-completion
+  - direnv
   - doxygen
   - gettext
   - gifsicle
   - git
   - gh
-  - go
+  - fish
+  #  - go
   - gpg
   - httpie
   - iperf
   - libevent
   - sqlite
+  - starship
   - nmap
   - node
   - nvm
-  - php
+  - neovim
+  - ollama
+  #  - php
   - pngpaste
   - ssh-copy-id
+  - tailscale
+  - tmux
   - readline
   - openssl
+  - opencode
   - pv
   - wget
   - wrk
@@ -64,18 +72,22 @@ homebrew_installed_packages:
 homebrew_taps: []
 
 homebrew_cask_appdir: /Applications
-homebrew_cask_apps:
-  - chromedriver
-  - docker
-  - dropbox
-  - firefox
-  - google-chrome
-  - handbrake
-  - licecap
-  - sequel-ace
-  - slack
-  - sublime-text
-  - transmit
+homebrew_cask_apps: # []
+  # - tailscale
+  - ghostty
+  - lm-studio
+  - claude-code
+  # - chromedriver
+  # - docker
+  # - dropbox
+  # - firefox
+  # - google-chrome
+  # - handbrake
+  # - licecap
+  # - sequel-ace
+  # - slack
+  # - sublime-text
+  # - transmit
 
 # See `geerlingguy.mac.mas` role documentation for usage instructions.
 mas_installed_apps: []
@@ -105,22 +117,22 @@ pip_packages: []
 #   version: "0.16.3" # default: N/A
 
 # Set to 'true' to configure Sublime Text.
-configure_sublime: false
-sublime_base_path: "~/Library/Application Support/Sublime Text"
-sublime_config_path: "Packages/User"
-sublime_package_control:
-  - "DocBlockr"
-  - "Dockerfile Syntax Highlighting"
-  - "FileDiffs"
-  - "GitHub Flavored Markdown Preview"
-  - "Jinja2"
-  - "Package Control"
-  - "Pretty JSON"
-  - "SublimeLinter"
-  - "SublimeLinter-contrib-yamllint"
-  - "Theme - Cobalt2"
-  - "TrailingSpaces"
-  - "WordingStatus"
+# configure_sublime: false
+# sublime_base_path: "~/Library/Application Support/Sublime Text"
+# sublime_config_path: "Packages/User"
+# sublime_package_control: []
+# - "DocBlockr"
+# - "Dockerfile Syntax Highlighting"
+# - "FileDiffs"
+# - "GitHub Flavored Markdown Preview"
+# - "Jinja2"
+# - "Package Control"
+# - "Pretty JSON"
+# - "SublimeLinter"
+# - "SublimeLinter-contrib-yamllint"
+# - "Theme - Cobalt2"
+# - "TrailingSpaces"
+# - "WordingStatus"
 
 # Glob pattern to ansible task files to run after all other tasks are finished.
 post_provision_tasks: []
