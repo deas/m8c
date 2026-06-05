@@ -38,14 +38,13 @@ homebrew_installed_packages:
   - autoconf
   - bash-completion
   - direnv
-  - doxygen
   - gettext
-  - gifsicle
   - git
   - gh
+  - tea
   - fish
   #  - go
-  - gpg
+  - gnupg
   - httpie
   - iperf
   - libevent
@@ -58,6 +57,7 @@ homebrew_installed_packages:
   - ollama
   #  - php
   - pngpaste
+  - python@3.13
   - ssh-copy-id
   - tailscale
   - tmux
@@ -65,9 +65,15 @@ homebrew_installed_packages:
   - openssl
   - opencode
   - pv
+  - uv
   - wget
+  - whisper-cpp
   - wrk
   - zsh-history-substring-search
+
+homebrew_uninstalled_packages:
+  - doxygen
+  - gifsicle
 
 homebrew_taps: []
 
@@ -77,8 +83,10 @@ homebrew_cask_apps: # []
   - ghostty
   - lm-studio
   - claude-code
+  - gcloud-cli
+  - obsidian
   # - chromedriver
-  # - docker
+  - docker
   # - dropbox
   # - firefox
   # - google-chrome
@@ -108,6 +116,7 @@ gem_packages: []
 #   state: present # present/absent/latest, default: present
 #   version: "~> 1.15.1" # default: N/A
 npm_packages: []
+#  - googleworkspace/cli
 # - name: webpack
 #   state: present # present/absent/latest, default: present
 #   version: "^2.6" # default: N/A
@@ -136,3 +145,12 @@ pip_packages: []
 
 # Glob pattern to ansible task files to run after all other tasks are finished.
 post_provision_tasks: []
+
+# whisper.cpp configuration
+whisper_cpp_models:
+  - medium
+  # TODO: "~/.local" expands to local folder
+whisper_cpp_models_dir: "/Users/devops/.local/share/whisper-cpp/models"
+whisper_cpp_server_enabled: true
+whisper_cpp_server_host: "0.0.0.0"
+whisper_cpp_server_port: 8080

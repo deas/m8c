@@ -6,6 +6,7 @@ HELP-DESCRIPTION-SPACING := 24
 # SSH_PRIVATE_KEY=$$HOME/.ssh/id_rsa.contentreich-automation
 
 include include/default.mk
+include include/gcp.mk
 
 init-macos: ## Prepare Mac OS for ansible development
 	xcode-select --install # Needs graphical UI
@@ -48,7 +49,7 @@ ansible-syntax-check: ## Check ansible syntax
 ansible-preflight: ansible-syntax-check ansible-playbook-check ## Ansible preflight before commit
 
 .PHONY: preflight
-preflight: shell-preflight tf-preflight ansible-preflight ## Preflight before commit
+preflight: shell-preflight ansible-preflight ## Preflight before commit
 
 .PHONY: shell-preflight
 shell-preflight: shell-fmt shell-lint shell-test  ## Shell preflight before commit

@@ -45,6 +45,9 @@
     - import_tasks: tasks/services.yml
       tags: ["extra-packages"]
 
+    - import_tasks: tasks/whisper-cpp.yml
+      tags: ["whisper-cpp"]
+
     - name: Run post-provision task files in a block.
       tags: ["post"]
       block:

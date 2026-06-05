@@ -3,6 +3,8 @@
 .ansible
 *.retry
 roles*
-.env*
+.env
 config.yml
+scratch
+*-key.json
 

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.whisper-cpp.server</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/opt/homebrew/bin/whisper-server</string>
+        <string>--host</string>
+        <string>{{ whisper_cpp_server_host }}</string>
+        <string>--port</string>
+        <string>{{ whisper_cpp_server_port | string }}</string>
+        <string>--model</string>
+        <string>{{ whisper_cpp_models_dir | expanduser }}/ggml-{{ whisper_cpp_models[0] }}.bin</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>/tmp/whisper-cpp-server.log</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/whisper-cpp-server.error.log</string>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+    </dict>
+</dict>
+</plist>
