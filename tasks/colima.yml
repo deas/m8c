@@ -1,0 +1,48 @@
+---
+- name: Configure Colima and Docker CLI plugins
+  become: false
+  block:
+    - name: Ensure ~/.docker/cli-plugins directory exists
+      ansible.builtin.file:
+        path: "{{ ansible_env.HOME }}/.docker/cli-plugins"
+        state: directory
+        mode: "0755"
+
+    - name: Symlink docker-compose and docker-buildx into the Docker CLI plugins directory
+      ansible.builtin.file:
+        src: "/opt/homebrew/opt/{{ item }}/bin/{{ item }}"
+        dest: "{{ ansible_env.HOME }}/.docker/cli-plugins/{{ item }}"
+        state: link
+        force: true
+      loop:
+        - docker-compose
+        - docker-buildx
+
+    - name: Bootstrap the Colima default profile if it has never been started
+      ansible.builtin.command: "colima start --memory {{ colima_memory_gib }} --runtime docker"
+      args:
+        creates: "{{ ansible_env.HOME }}/.colima/default/colima.yaml"
+      environment:
+        HOMEBREW_NO_ENV_HINTS: "1"
+
+    - name: Ensure Colima default profile memory matches the configured value
+      ansible.builtin.lineinfile:
+        path: "{{ ansible_env.HOME }}/.colima/default/colima.yaml"
+        regexp: "^memory:"
+        line: "memory: {{ colima_memory_gib }}"
+      register: colima_memory_config
+
+    - name: Ensure Colima is started and managed as a brew service (auto-start on login)
+      ansible.builtin.command: /opt/homebrew/bin/brew services start colima
+      register: colima_service
+      changed_when: "'already started' not in colima_service.stdout"
+      environment:
+        HOMEBREW_SERVICES_NO_DOMAIN_WARNING: "1"
+        HOMEBREW_NO_ENV_HINTS: "1"
+
+    - name: Restart the Colima brew service when the memory size changed
+      ansible.builtin.command: /opt/homebrew/bin/brew services restart colima
+      environment:
+        HOMEBREW_SERVICES_NO_DOMAIN_WARNING: "1"
+        HOMEBREW_NO_ENV_HINTS: "1"
+      when: colima_memory_config.changed
