@@ -20,5 +20,5 @@ services:
     env_file:
       - path: ./app.env
         required: true
-      - path: ./secrets.env
+      - path: ./secret.env
         required: true
