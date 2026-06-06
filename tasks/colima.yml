@@ -41,17 +41,62 @@
         - { regexp: "^mountType:", line: "mountType: {{ colima_mount_type }}" }
       register: colima_profile_config
 
-    - name: Ensure Colima is started and managed as a brew service (auto-start on login)
-      ansible.builtin.command: /opt/homebrew/bin/brew services start colima
-      register: colima_service
-      changed_when: "'already started' not in colima_service.stdout"
+    - name: Disable the per-user brew-services Colima LaunchAgent (superseded by system LaunchDaemon)
+      ansible.builtin.command: /opt/homebrew/bin/brew services stop colima
+      register: colima_brew_stop
+      failed_when: false
+      changed_when: "'Stopping' in colima_brew_stop.stdout or 'unloaded' in colima_brew_stop.stdout"
       environment:
         HOMEBREW_SERVICES_NO_DOMAIN_WARNING: "1"
         HOMEBREW_NO_ENV_HINTS: "1"
 
-    - name: Restart the Colima brew service when profile settings changed
-      ansible.builtin.command: /opt/homebrew/bin/brew services restart colima
-      environment:
-        HOMEBREW_SERVICES_NO_DOMAIN_WARNING: "1"
-        HOMEBREW_NO_ENV_HINTS: "1"
-      when: colima_profile_config.changed
+    - name: Remove the brew-services Colima LaunchAgent plist if present
+      ansible.builtin.file:
+        path: "{{ ansible_env.HOME }}/Library/LaunchAgents/homebrew.mxcl.colima.plist"
+        state: absent
+
+- name: Install Colima system LaunchDaemon (starts the VM at boot, before login)
+  become: true
+  block:
+    - name: Render /Library/LaunchDaemons/com.colima.{{ ansible_user_id }}.plist
+      ansible.builtin.template:
+        src: colima-launchd.plist.j2
+        dest: "/Library/LaunchDaemons/com.colima.{{ ansible_user_id }}.plist"
+        owner: root
+        group: wheel
+        mode: "0644"
+      register: colima_daemon_plist
+
+    - name: Ensure the Colima log file exists and is writable by {{ ansible_user_id }}
+      ansible.builtin.file:
+        path: /opt/homebrew/var/log/colima.log
+        state: touch
+        owner: "{{ ansible_user_id }}"
+        group: staff
+        mode: "0644"
+      changed_when: false
+
+    - name: Probe whether the Colima LaunchDaemon is already loaded
+      ansible.builtin.command: >-
+        launchctl print system/com.colima.{{ ansible_user_id }}
+      register: colima_daemon_print
+      changed_when: false
+      failed_when: false
+
+    - name: Bootout the Colima LaunchDaemon when plist or profile changed
+      ansible.builtin.command: >-
+        launchctl bootout system/com.colima.{{ ansible_user_id }}
+      changed_when: true
+      when:
+        - colima_daemon_print.rc == 0
+        - colima_daemon_plist.changed or colima_profile_config.changed
+
+    - name: Bootstrap the Colima LaunchDaemon into the system domain
+      ansible.builtin.command: >-
+        launchctl bootstrap system
+        /Library/LaunchDaemons/com.colima.{{ ansible_user_id }}.plist
+      changed_when: true
+      when: >-
+        colima_daemon_print.rc != 0
+        or colima_daemon_plist.changed
+        or colima_profile_config.changed
