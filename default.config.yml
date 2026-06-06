@@ -84,6 +84,9 @@ homebrew_cask_uninstalled_apps:
 
 # Colima (Docker daemon VM) configuration.
 colima_memory_gib: 4
+# vz + virtiofs gives near-native bind-mount perf on Apple Silicon (macOS 13+).
+colima_vm_type: vz
+colima_mount_type: virtiofs
 
 homebrew_taps: []
 
