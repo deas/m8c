@@ -1,17 +1,18 @@
 ---
 - name: Configure Colima and Docker CLI plugins
-  become: false
+  become: true
+  become_user: "{{ colima_target_user }}"
   block:
     - name: Ensure ~/.docker/cli-plugins directory exists
       ansible.builtin.file:
-        path: "{{ ansible_env.HOME }}/.docker/cli-plugins"
+        path: "{{ colima_target_user_home }}/.docker/cli-plugins"
         state: directory
         mode: "0755"
 
     - name: Symlink docker-compose and docker-buildx into the Docker CLI plugins directory
       ansible.builtin.file:
         src: "/opt/homebrew/opt/{{ item }}/bin/{{ item }}"
-        dest: "{{ ansible_env.HOME }}/.docker/cli-plugins/{{ item }}"
+        dest: "{{ colima_target_user_home }}/.docker/cli-plugins/{{ item }}"
         state: link
         force: true
       loop:
@@ -26,13 +27,13 @@
         --vm-type {{ colima_vm_type }}
         --mount-type {{ colima_mount_type }}
       args:
-        creates: "{{ ansible_env.HOME }}/.colima/default/colima.yaml"
+        creates: "{{ colima_target_user_home }}/.colima/default/colima.yaml"
       environment:
         HOMEBREW_NO_ENV_HINTS: "1"
 
     - name: Ensure Colima default profile settings match the configured values
       ansible.builtin.lineinfile:
-        path: "{{ ansible_env.HOME }}/.colima/default/colima.yaml"
+        path: "{{ colima_target_user_home }}/.colima/default/colima.yaml"
         regexp: "{{ item.regexp }}"
         line: "{{ item.line }}"
       loop:
@@ -76,7 +77,7 @@
               print("changed")
           EOF
       environment:
-        COLIMA_CONFIG: "{{ ansible_env.HOME }}/.colima/default/colima.yaml"
+        COLIMA_CONFIG: "{{ colima_target_user_home }}/.colima/default/colima.yaml"
         COLIMA_MOUNTS: "{{ colima_extra_mounts | to_json }}"
       register: colima_mounts_config
       changed_when: "'changed' in colima_mounts_config.stdout"
@@ -92,40 +93,40 @@
 
     - name: Remove the brew-services Colima LaunchAgent plist if present
       ansible.builtin.file:
-        path: "{{ ansible_env.HOME }}/Library/LaunchAgents/homebrew.mxcl.colima.plist"
+        path: "{{ colima_target_user_home }}/Library/LaunchAgents/homebrew.mxcl.colima.plist"
         state: absent
 
 - name: Install Colima system LaunchDaemon (starts the VM at boot, before login)
   become: true
   block:
-    - name: Render /Library/LaunchDaemons/com.colima.{{ ansible_user_id }}.plist
+    - name: Render /Library/LaunchDaemons/com.colima.{{ colima_target_user }}.plist
       ansible.builtin.template:
         src: colima-launchd.plist.j2
-        dest: "/Library/LaunchDaemons/com.colima.{{ ansible_user_id }}.plist"
+        dest: "/Library/LaunchDaemons/com.colima.{{ colima_target_user }}.plist"
         owner: root
         group: wheel
         mode: "0644"
       register: colima_daemon_plist
 
-    - name: Ensure the Colima log file exists and is writable by {{ ansible_user_id }}
+    - name: Ensure the Colima log file exists and is writable by {{ colima_target_user }}
       ansible.builtin.file:
         path: /opt/homebrew/var/log/colima.log
         state: touch
-        owner: "{{ ansible_user_id }}"
+        owner: "{{ colima_target_user }}"
         group: staff
         mode: "0644"
       changed_when: false
 
     - name: Probe whether the Colima LaunchDaemon is already loaded
       ansible.builtin.command: >-
-        launchctl print system/com.colima.{{ ansible_user_id }}
+        launchctl print system/com.colima.{{ colima_target_user }}
       register: colima_daemon_print
       changed_when: false
       failed_when: false
 
     - name: Bootout the Colima LaunchDaemon when plist or profile changed
       ansible.builtin.command: >-
-        launchctl bootout system/com.colima.{{ ansible_user_id }}
+        launchctl bootout system/com.colima.{{ colima_target_user }}
       changed_when: true
       when:
         - colima_daemon_print.rc == 0
@@ -134,7 +135,7 @@
     - name: Bootstrap the Colima LaunchDaemon into the system domain
       ansible.builtin.command: >-
         launchctl bootstrap system
-        /Library/LaunchDaemons/com.colima.{{ ansible_user_id }}.plist
+        /Library/LaunchDaemons/com.colima.{{ colima_target_user }}.plist
       changed_when: true
       when: >-
         colima_daemon_print.rc != 0
