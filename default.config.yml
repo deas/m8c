@@ -87,6 +87,9 @@ colima_memory_gib: 4
 # vz + virtiofs gives near-native bind-mount perf on Apple Silicon (macOS 13+).
 colima_vm_type: vz
 colima_mount_type: virtiofs
+colima_extra_mounts:
+  - location: "{{ ansible_env.HOME }}"
+    writable: true
 
 homebrew_taps: []
 
